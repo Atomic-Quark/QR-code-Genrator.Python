@@ -1,28 +1,30 @@
-# Python QR Code Generator Guide
+# QR Code Generator Comparison: Python vs Java
 
 ## Table of Contents
-1. Introduction
-2. Installation Requirements
-3. Object-Oriented Implementation
-4. Code Explanation
-5. How It Works
-6. Running in Visual Studio Code
-7. Usage Examples
-8. Customization Options
-9. Troubleshooting
-10. Further Extensions
+1. [Introduction](#introduction)
+2. [Installation Requirements](#installation-requirements)
+3. [Implementation Comparison](#implementation-comparison)
+4. [Code Structure Analysis](#code-structure-analysis)
+5. [Customization Options](#customization-options)
+6. [Performance Considerations](#performance-considerations)
+7. [Use Cases](#use-cases)
+8. [Extensions and Advanced Features](#extensions-and-advanced-features)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
 
-## 1. Introduction
+## Introduction
 
-QR (Quick Response) codes are two-dimensional barcodes that can store various types of data, including URLs, text, contact information, and more. This guide explains a Python implementation of a QR code generator using object-oriented programming principles.
+QR (Quick Response) codes are two-dimensional barcodes capable of storing various types of data, including URLs, text, contact information, and more. This document compares object-oriented implementations of QR code generators in two popular programming languages: Python and Java.
 
-The Python implementation uses the popular qrcode library along with PIL (Python Imaging Library) for image processing. This approach provides a simple yet powerful way to generate QR codes with various customization options.
+The Python implementation leverages the popular `qrcode` library along with PIL (Python Imaging Library) for image processing. The Java implementation utilizes the ZXing ("Zebra Crossing") library, a well-established open-source library for 1D and 2D barcode image processing.
 
-## 2. Installation Requirements
+Both implementations follow object-oriented programming principles, providing clean, reusable, and customizable code for generating QR codes with various properties.
 
-Before using the QR code generator, you need to install Python and the required libraries:
+## Installation Requirements
 
-```
+### Python Requirements
+
+```bash
 # Install Python (if not already installed)
 # Download from https://python.org
 
@@ -30,11 +32,39 @@ Before using the QR code generator, you need to install Python and the required 
 pip install qrcode[pil]
 ```
 
-The qrcode[pil] installation includes:
+The `qrcode[pil]` installation includes:
 - The main QR code generation library
 - Pillow (PIL fork) for image processing
 
-## 3. Object-Oriented Implementation
+### Java Requirements
+
+1. **Java Development Kit (JDK)**
+   - Download and install JDK from Oracle or use OpenJDK
+   - Set the JAVA_HOME environment variable
+
+2. **ZXing Library**
+   - Option 1: Maven (Recommended)
+     ```xml
+     <dependencies>
+       <dependency>
+         <groupId>com.google.zxing</groupId>
+         <artifactId>core</artifactId>
+         <version>3.5.1</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.zxing</groupId>
+         <artifactId>javase</artifactId>
+         <version>3.5.1</version>
+       </dependency>
+     </dependencies>
+     ```
+   - Option 2: Manual JAR Installation
+     - Download the ZXing JAR files from Maven Repository
+     - Add the JAR files to your project's classpath
+
+## Implementation Comparison
+
+### Python Implementation
 
 ```python
 import qrcode
@@ -42,14 +72,19 @@ from PIL import Image
 import os
 
 class QRCodeGenerator:
+    """
+    A class for generating QR codes with customizable properties.
+    """
     def __init__(self):
-        self.size = 4
-        self.border = 4
-        self.fill_color = "black"
-        self.back_color = "white"
-        self.box_size = 10
-
+        # Default values for QR code properties
+        self.size = 4  # QR code version (1-40)
+        self.border = 4  # Border width
+        self.fill_color = "black"  # QR code color
+        self.back_color = "white"  # Background color
+        self.box_size = 10  # Size of each box in pixels
+        
     def set_properties(self, size=None, border=None, fill_color=None, back_color=None, box_size=None):
+        """Set the properties for the QR code"""
         if size is not None:
             self.size = size
         if border is not None:
@@ -60,267 +95,335 @@ class QRCodeGenerator:
             self.back_color = back_color
         if box_size is not None:
             self.box_size = box_size
-
-    def generate(self, data, output_file="qrcode5.png"):
+            
+    def generate(self, data, output_file="qrcode.png"):
+        """
+        Generate a QR code for the given data and save it to a file
+        Parameters:
+            data (str): The data to encode in the QR code
+            output_file (str): The filename to save the QR code image to
+        Returns:
+            str: Path to the generated QR code image
+        """
+        # Create QR code instance with our properties
         qr = qrcode.QRCode(
-            version=self.size,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=self.box_size,
-            border=self.border
+            version=self.size,  # Size of the QR code
+            error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction
+            box_size=self.box_size,  # Size of each box in pixels
+            border=self.border  # Border size
         )
-
+        
+        # Add our data to the QR code
         qr.add_data(data)
-        qr.make(fit=True)
-
+        qr.make(fit=True)  # Fit ensures the code is made properly
+        
+        # Create an image from the QR code with our colors
         img = qr.make_image(fill_color=self.fill_color, back_color=self.back_color)
-
+        
+        # Save the image to a file
         img.save(output_file)
-
+        
+        # Return the full path to the file
         return os.path.abspath(output_file)
-
-if __name__ == "__main__":
-    generator = QRCodeGenerator()
-
-    output_path = generator.generate("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlYxTsrHiM5jFyET2Cec3NTSRY7vMKIsQ1XQ&s")
-    print(f"QR code created at: {output_path}")
 ```
 
-## 4. Code Explanation
+### Java Implementation
 
-The implementation follows object-oriented programming principles with a clear class structure:
+```java
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-### Libraries Used
-1. **qrcode**: The main library that handles QR code generation in Python
-2. **PIL (Python Imaging Library)**: Handles image processing and file saving
-3. **os**: Provides functions for interacting with the operating system, particularly for obtaining absolute file paths
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
-### QRCodeGenerator Class
-The class encapsulates all the functionality needed to generate QR codes with customizable properties.
-
-#### Constructor (__init__)
-Sets default values for QR code properties:
-- **size**: Controls how large the QR code is (versions 1-40)
-- **border**: The white space around the QR code (quiet zone)
-- **fill_color**: The color of the QR code patterns
-- **back_color**: The background color
-- **box_size**: How many pixels each "module" (small square) takes up
-
-#### Methods
-- **set_properties()**: Allows customizing the QR code appearance. Each parameter is optional, so you can change just the properties you want.
-- **generate()**: The main method that creates the QR code:
-  - Takes the data to encode and an optional output filename (defaults to "qrcode5.png")
-  - Creates a QR code object with the configured settings
-  - Adds the data to the QR code
-  - Creates an image from the QR code data
-  - Saves the image to a file
-  - Returns the absolute path to the generated file
-
-## 5. How It Works
-
-The QR code generation process follows these steps:
-
-1. **Initialization**: A QRCodeGenerator object is created with default or custom properties.
-2. **Configuration**: The properties of the QR code can be customized using the set_properties() method.
-3. **Data Encoding**: When generate() is called:
-   - A QRCode object is created with the specified properties
-   - The data is added to the QR code
-   - The QR code is processed to create the matrix of modules
-4. **Image Creation**: The QRCode object's make_image() method creates a PIL Image object with the specified colors.
-5. **Saving**: The image is saved to the specified file path.
-6. **Path Return**: The absolute path to the saved file is returned using os.path.abspath().
-
-### Error Correction
-The implementation uses ERROR_CORRECT_H (high) level error correction, which means:
-- Approximately 30% of the QR code can be damaged or obscured, and it will still be readable
-- This is the highest level of error correction available
-- Higher error correction levels result in larger QR codes for the same data
-
-## 6. Running in Visual Studio Code
-
-### Setup
-1. **Install Python**:
-   - Download and install Python from python.org (https://python.org)
-   - Make sure to check "Add Python to PATH" during installation
-
-2. **Install VS Code Extensions**:
-   - Open VS Code
-   - Go to Extensions (icon on the left sidebar)
-   - Search for and install "Python" extension by Microsoft
-
-3. **Create the Script**:
-   - Create a new file in VS Code
-   - Copy the QRCodeGenerator class code
-   - Save it as ppj1.py
-
-4. **Install Required Libraries**:
-   - Open a terminal in VS Code (Terminal → New Terminal)
-   - Run: `pip install qrcode[pil]`
-
-### Running the Code
-**Method 1: Using the Run Button**
-- With the Python file open, click the "Run" button (green triangle) in the top-right corner
-- OR press F5
-
-**Method 2: Using the Terminal**
-- Open a terminal in VS Code
-- Navigate to the directory containing your script
-- Run: `python ppj1.py`
-
-## 7. Usage Examples
-
-### Basic usage with default settings:
-```python
-# Create a generator
-generator = QRCodeGenerator()
-
-# Generate a QR code with default settings
-path = generator.generate("https://example.com")
-print(f"QR code saved to: {path}")
+/**
+ * A class for generating QR codes in Java
+ */
+public class QRCodeGenerator {
+    // QR code properties
+    private int width = 300;  // Width of the QR code image
+    private int height = 300;  // Height of the QR code image
+    private String format = "png";  // Image format
+    private ErrorCorrectionLevel errorCorrection = ErrorCorrectionLevel.H;  // Error correction level
+    private int margin = 2;  // Margin around QR code
+    
+    /**
+     * Default constructor
+     */
+    public QRCodeGenerator() {
+        // Uses default values
+    }
+    
+    /**
+     * Constructor with custom properties
+     */
+    public QRCodeGenerator(int width, int height, String format,
+                         ErrorCorrectionLevel errorCorrection, int margin) {
+        this.width = width;
+        this.height = height;
+        this.format = format;
+        this.errorCorrection = errorCorrection;
+        this.margin = margin;
+    }
+    
+    /**
+     * Set the dimensions of the QR code image
+     */
+    public void setDimensions(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+    
+    /**
+     * Set the image format (png, jpg, etc.)
+     */
+    public void setFormat(String format) {
+        this.format = format;
+    }
+    
+    /**
+     * Set the error correction level
+     */
+    public void setErrorCorrection(ErrorCorrectionLevel errorCorrection) {
+        this.errorCorrection = errorCorrection;
+    }
+    
+    /**
+     * Set the margin around the QR code
+     */
+    public void setMargin(int margin) {
+        this.margin = margin;
+    }
+    
+    /**
+     * Generate a QR code with the given data and save it to a file
+     *
+     * @param data The data to encode in the QR code
+     * @param outputPath The path where the QR code image will be saved
+     * @return The absolute path to the generated file
+     * @throws WriterException If there is an error generating the QR code
+     * @throws IOException If there is an error saving the file
+     */
+    public String generate(String data, String outputPath)
+            throws WriterException, IOException {
+        // Create a configuration map
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        
+        // Set our configuration options
+        hints.put(EncodeHintType.ERROR_CORRECTION, this.errorCorrection);
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+        hints.put(EncodeHintType.MARGIN, this.margin);
+        
+        // Create a QR code writer
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        
+        // Create the QR code as a bit matrix
+        BitMatrix bitMatrix = qrCodeWriter.encode(
+            data,  // The data to encode
+            BarcodeFormat.QR_CODE,  // Type of barcode
+            this.width,  // Width of image
+            this.height,  // Height of image
+            hints  // Configuration options
+        );
+        
+        // Determine file format from output path if not explicitly set
+        String outputFormat = this.format;
+        if (outputPath.contains(".")) {
+            String extension = outputPath.substring(outputPath.lastIndexOf('.') + 1).toLowerCase();
+            if (!extension.isEmpty()) {
+                outputFormat = extension;
+            }
+        }
+        
+        // Create the output file
+        File outputFile = new File(outputPath);
+        
+        // Write the QR code to the file
+        MatrixToImageWriter.writeToPath(bitMatrix, outputFormat, outputFile.toPath());
+        
+        // Return the absolute path
+        return outputFile.getAbsolutePath();
+    }
+}
 ```
 
-### Customizing the QR code:
-```python
-# Create a generator
-generator = QRCodeGenerator()
+## Code Structure Analysis
 
-# Customize the appearance
+### Common Features
+
+Both implementations share several key structural elements:
+
+1. **Class-Based Approach**: Both use a dedicated `QRCodeGenerator` class to encapsulate functionality.
+2. **Default Constructor**: Both provide a default constructor with reasonable default values.
+3. **Customizable Properties**: Both allow customizing QR code properties.
+4. **Generate Method**: Both provide a primary method to generate and save QR codes.
+5. **Return Value**: Both return the absolute path to the generated file.
+
+### Key Differences
+
+1. **Property Customization**:
+   - **Python**: Uses a single `set_properties` method with optional parameters
+   - **Java**: Uses individual setter methods for each property
+
+2. **Error Handling**:
+   - **Python**: Does not explicitly handle exceptions in the generator class
+   - **Java**: Explicitly declares exceptions with `throws` and includes more rigorous error handling
+
+3. **Image Dimensions**:
+   - **Python**: Controls size via `box_size` (pixel size of each module) and QR code version
+   - **Java**: Directly sets pixel dimensions for width and height
+
+4. **Configuration**:
+   - **Python**: Configures via direct object parameters
+   - **Java**: Uses a hints map for configuration
+
+5. **Constructor Options**:
+   - **Python**: Only provides a default constructor
+   - **Java**: Offers both default and parameterized constructors
+
+## Customization Options
+
+### Python Customization
+
+The Python implementation offers these customization options:
+
+1. **Size (Version)**: Controls the overall size of the QR code (versions 1-40)
+2. **Border**: Controls the width of the white space (quiet zone) around the QR code
+3. **Fill Color**: The color of the QR code modules (dark parts)
+4. **Background Color**: The color of the spaces between modules
+5. **Box Size**: Controls the size of each individual module in pixels
+
+Example:
+```python
+generator = QRCodeGenerator()
 generator.set_properties(
-    size=6,            # Larger QR code
-    border=2,          # Smaller border
-    fill_color="blue", # Blue QR code
-    back_color="#FFFFDD", # Light yellow background
-    box_size=15        # Larger modules
+    size=6,  # Larger QR code
+    border=2,  # Smaller border
+    fill_color="blue",  # Blue QR code
+    back_color="#FFFFDD",  # Light yellow background
+    box_size=15  # Larger modules
 )
-
-# Generate a custom QR code
-path = generator.generate("Custom data here", "custom_qr.png")
-print(f"Custom QR code saved to: {path}")
 ```
 
-### Generating multiple QR codes with the same settings:
-```python
-# Create a generator with custom settings
-generator = QRCodeGenerator()
-generator.set_properties(size=5, fill_color="red")
+### Java Customization
 
-# Generate multiple QR codes
-urls = ["https://example.com", "https://example.org", "https://example.net"]
-for i, url in enumerate(urls):
-    output_file = f"qrcode_{i+1}.png"
-    path = generator.generate(url, output_file)
-    print(f"Generated QR code for {url} at {path}")
+The Java implementation offers these customization options:
+
+1. **Width and Height**: Controls the pixel dimensions of the output image
+2. **Format**: Controls the image format (PNG, JPG, etc.)
+3. **Error Correction Level**: Controls the level of error correction (L, M, Q, H)
+4. **Margin**: Controls the width of the white space around the QR code
+
+Example:
+```java
+QRCodeGenerator generator = new QRCodeGenerator();
+generator.setDimensions(400, 400);
+generator.setErrorCorrection(ErrorCorrectionLevel.Q);
+generator.setMargin(4);
+generator.setFormat("jpg");
 ```
 
-## 8. Customization Options
+## Performance Considerations
 
-The QR code generator provides several customization options:
+### Python Implementation
 
-### Size (Version)
-- **Range**: 1-40
-- **Effect**: Controls the overall size of the QR code and how much data it can store
-- **Example**: `generator.set_properties(size=10)`
+**Advantages**:
+- Simpler installation and fewer dependencies
+- More straightforward color customization
+- More intuitive size control for beginners
 
-### Border
-- **Effect**: Controls the width of the white space (quiet zone) around the QR code
-- **Recommendation**: At least 4 modules for reliable scanning
-- **Example**: `generator.set_properties(border=4)`
+**Limitations**:
+- Generally slower performance for large batches
+- Less explicit error handling
+- Limited format options compared to Java
 
-### Colors
-- **Fill Color**: The color of the QR code modules (the dark parts)
-- **Background Color**: The color of the spaces between modules
-- **Formats**: Color names ("red", "blue") or hex codes ("#FF0000")
-- **Example**: `generator.set_properties(fill_color="navy", back_color="#FFFFEE")`
+### Java Implementation
 
-### Box Size
-- **Effect**: Controls the size of each individual module in pixels
-- **Example**: `generator.set_properties(box_size=20)`
+**Advantages**:
+- Better performance for large batches of QR codes
+- More robust error handling
+- Supports more barcode formats through ZXing
+- Better integration with enterprise systems
 
-## 9. Troubleshooting
+**Limitations**:
+- More complex setup and dependency management
+- Less intuitive color customization
+- Steeper learning curve
 
-Common issues and solutions:
+## Use Cases
 
-### QR Code Too Small or Too Large
-- Adjust the box_size parameter to change the size of each module
-- Example: `generator.set_properties(box_size=20)`
+### When to Choose Python
 
-### QR Code Not Scanning
-- Ensure adequate contrast between fill and background colors
-- Increase the border size
-- Use a higher error correction level (already using highest in this implementation)
-- Reduce the amount of data encoded in the QR code
+1. **Rapid Development**: When you need to quickly implement QR code generation
+2. **Simple Projects**: For small to medium-sized projects
+3. **Custom Visual Styling**: When you need extensive color customization
+4. **Integration with Python Ecosystem**: When working with other Python libraries or frameworks
+5. **Educational Projects**: For learning or teaching QR code generation concepts
 
-### Module 'qrcode' Not Found
-- Ensure you've installed the library: `pip install qrcode[pil]`
-- Check your Python environment if using virtual environments
+### When to Choose Java
 
-### Missing os Module Error
-- Make sure to include `import os` at the top of your script
-- This is required for the `os.path.abspath()` function used in the `generate()` method
+1. **Enterprise Applications**: For large-scale, enterprise-level applications
+2. **Performance-Critical Systems**: When generating large numbers of QR codes
+3. **Android Development**: For integrating QR code generation into Android apps
+4. **Multi-Format Support**: When you need support for multiple barcode formats
+5. **Mission-Critical Applications**: When robust error handling is essential
 
-### PIL-Related Errors
-- Ensure Pillow is installed: `pip install Pillow`
-- This should be included with qrcode[pil] but can be installed separately
+## Extensions and Advanced Features
 
-### Permission Error When Saving
-- Ensure you have write permissions to the output directory
-- Try using an absolute path for the output file
-- Run VS Code as administrator if necessary
+### Python Extensions
 
-## 10. Further Extensions
-
-The QR code generator can be extended in several ways:
-
-### Add Logo to QR Code
+1. **Adding Logos to QR Codes**:
 ```python
 def add_logo(self, qr_image, logo_path, logo_size=0.2):
     """Add a logo to the center of the QR code"""
     qr_size = qr_image.size[0]
     logo = Image.open(logo_path)
+    
     # Calculate logo size
     logo_width = int(qr_size * logo_size)
     logo_height = int(logo_width * logo.size[1] / logo.size[0])
     logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
+    
     # Calculate position
     pos_x = (qr_size - logo_width) // 2
     pos_y = (qr_size - logo_height) // 2
+    
     # Create a new image with logo
     qr_with_logo = qr_image.copy()
-    qr_with_logo.paste(logo, (pos_x, pos_y), logo if logo.mode == 'RGBA' else None)
+    qr_with_logo.paste(logo, (pos_x, pos_y), 
+                      logo if logo.mode == 'RGBA' else None)
     return qr_with_logo
 ```
 
-### Batch Processing from CSV
+2. **Batch Processing from CSV**:
 ```python
 def batch_generate_from_csv(self, csv_file, output_dir="qrcodes"):
     """Generate QR codes in batch from a CSV file"""
     import csv
     import os
+    
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+    
     # Process CSV file
     with open(csv_file, 'r') as file:
         reader = csv.reader(file)
-        next(reader) # Skip header row
+        next(reader)  # Skip header row
         for i, row in enumerate(reader):
-            data = row[0] # Assuming data is in the first column
+            data = row[0]  # Assuming data is in the first column
             output_file = os.path.join(output_dir, f"qrcode_{i+1}.png")
             self.generate(data, output_file)
             print(f"Generated QR code for: {data}")
 ```
 
-### GUI Interface
-The generator could be extended with a simple graphical interface using libraries like Tkinter:
-```python
-import tkinter as tk
-from tkinter import filedialog, colorchooser
-import os
-from PIL import ImageTk, Image
-# Create a GUI for the QR code generator
-# (Code would go here)
-```
-
-### Web API
-The generator could be wrapped in a web API using Flask or FastAPI:
+3. **Flask Web API**:
 ```python
 from flask import Flask, request, send_file
 import io
@@ -331,8 +434,10 @@ app = Flask(__name__)
 def generate_qr():
     data = request.args.get('data', '')
     size = int(request.args.get('size', 4))
+    
     generator = QRCodeGenerator()
     generator.set_properties(size=size)
+    
     # Generate to a temporary file
     output_path = generator.generate(data, "temp_qr.png")
     return send_file(output_path, mimetype='image/png')
@@ -341,4 +446,124 @@ if __name__ == '__main__':
     app.run(debug=True)
 ```
 
-This concludes the comprehensive guide to the Python QR code generator. With this information, you should be able to understand, use, and extend the generator for your own projects.
+### Java Extensions
+
+1. **Custom Colors**:
+```java
+public BufferedImage createColoredQRCode(String data, int width, int height,
+                                        int onColor, int offColor)
+        throws WriterException, IOException {
+    // Generate the QR code as a bit matrix
+    BitMatrix bitMatrix = generateBitMatrix(data, width, height);
+    
+    // Create a buffered image with custom colors
+    BufferedImage qrImage = new BufferedImage(width, height, 
+                                            BufferedImage.TYPE_INT_RGB);
+    
+    // Fill the image with the appropriate colors
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            qrImage.setRGB(x, y, bitMatrix.get(x, y) ? onColor : offColor);
+        }
+    }
+    
+    return qrImage;
+}
+```
+
+2. **QR Code with Logo**:
+```java
+public BufferedImage addLogo(BufferedImage qrImage, BufferedImage logo, 
+                           double logoSizePercent) {
+    int qrWidth = qrImage.getWidth();
+    int qrHeight = qrImage.getHeight();
+    
+    // Calculate logo size
+    int logoWidth = (int)(qrWidth * logoSizePercent);
+    int logoHeight = (int)(qrHeight * logoSizePercent);
+    
+    // Scale logo
+    BufferedImage scaledLogo = new BufferedImage(logoWidth, logoHeight, 
+                                               BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g = scaledLogo.createGraphics();
+    g.drawImage(logo, 0, 0, logoWidth, logoHeight, null);
+    g.dispose();
+    
+    // Calculate position
+    int posX = (qrWidth - logoWidth) / 2;
+    int posY = (qrHeight - logoHeight) / 2;
+    
+    // Create a new image with logo
+    BufferedImage combined = new BufferedImage(qrWidth, qrHeight, 
+                                             BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g2 = combined.createGraphics();
+    g2.drawImage(qrImage, 0, 0, null);
+    g2.drawImage(scaledLogo, posX, posY, null);
+    g2.dispose();
+    
+    return combined;
+}
+```
+
+## Troubleshooting Guide
+
+### Common Issues in Python
+
+1. **QR Code Too Small or Too Large**
+   - **Solution**: Adjust the `box_size` parameter to change the size of each module
+     ```python
+     generator.set_properties(box_size=20)
+     ```
+
+2. **QR Code Not Scanning**
+   - **Solution**: 
+     - Ensure adequate contrast between fill and background colors
+     - Increase the border size
+     - Reduce the amount of data encoded in the QR code
+
+3. **Module 'qrcode' Not Found**
+   - **Solution**: Ensure you've installed the library
+     ```bash
+     pip install qrcode[pil]
+     ```
+
+4. **PIL-Related Errors**
+   - **Solution**: Ensure Pillow is installed
+     ```bash
+     pip install Pillow
+     ```
+
+### Common Issues in Java
+
+1. **ClassNotFoundException or NoClassDefFoundError**
+   - **Solution**: 
+     - Make sure the ZXing libraries are in your classpath
+     - For Maven projects, ensure your pom.xml has the correct dependencies
+
+2. **QR Code Not Scanning**
+   - **Solution**:
+     - Increase the image dimensions
+     - Use a higher error correction level
+     - Increase the margin
+
+3. **UnsupportedOperationException**
+   - **Solution**:
+     - Check that you're using a supported image format
+     - Make sure you have the correct libraries for your chosen format
+
+4. **File Not Found or Access Denied**
+   - **Solution**:
+     - Ensure you have write permissions to the output directory
+     - Try using an absolute path for the output file
+
+## Conclusion
+
+Both Python and Java offer robust solutions for generating QR codes, with each language providing unique advantages.
+
+The Python implementation excels in simplicity, readability, and ease of use. It's ideal for quick projects, prototyping, and scenarios where extensive visual customization is needed.
+
+The Java implementation offers superior performance, robust error handling, and better integration with enterprise systems. It's the preferred choice for large-scale applications, production environments, and systems requiring high reliability.
+
+When choosing between these implementations, consider your project requirements, existing technology stack, performance needs, and the expertise of your development team. Both implementations follow good object-oriented design principles and provide a solid foundation for QR code generation that can be extended for more advanced use cases.
+
+Regardless of which language you choose, both implementations demonstrate how to effectively use object-oriented programming to create customizable, reusable code for generating QR codes.
