@@ -130,126 +130,137 @@ class QRCodeGenerator:
 ### Java Implementation
 
 ```java
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
-/**
- * A class for generating QR codes in Java
- */
+import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
 public class QRCodeGenerator {
-    // QR code properties
-    private int width = 300;  // Width of the QR code image
-    private int height = 300;  // Height of the QR code image
-    private String format = "png";  // Image format
-    private ErrorCorrectionLevel errorCorrection = ErrorCorrectionLevel.H;  // Error correction level
-    private int margin = 2;  // Margin around QR code
-    
-    /**
-     * Default constructor
-     */
+    private int size;
+    private int border;
+    private String fillColor;
+    private String backColor;
+    private int boxSize;
+
     public QRCodeGenerator() {
-        // Uses default values
+        this.size = 4;
+        this.border = 4;
+        this.fillColor = "black";
+        this.backColor = "white";
+        this.boxSize = 10;
     }
-    
-    /**
-     * Constructor with custom properties
-     */
-    public QRCodeGenerator(int width, int height, String format,
-                         ErrorCorrectionLevel errorCorrection, int margin) {
-        this.width = width;
-        this.height = height;
-        this.format = format;
-        this.errorCorrection = errorCorrection;
-        this.margin = margin;
+
+    public void setProperties(Integer size, Integer border, String fillColor, String backColor, Integer boxSize) {
+        if (size != null) {
+            this.size = size;
+        }
+        if (border != null) {
+            this.border = border;
+        }
+        if (fillColor != null) {
+            this.fillColor = fillColor;
+        }
+        if (backColor != null) {
+            this.backColor = backColor;
+        }
+        if (boxSize != null) {
+            this.boxSize = boxSize;
+        }
     }
-    
-    /**
-     * Set the dimensions of the QR code image
-     */
-    public void setDimensions(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-    
-    /**
-     * Set the image format (png, jpg, etc.)
-     */
-    public void setFormat(String format) {
-        this.format = format;
-    }
-    
-    /**
-     * Set the error correction level
-     */
-    public void setErrorCorrection(ErrorCorrectionLevel errorCorrection) {
-        this.errorCorrection = errorCorrection;
-    }
-    
-    /**
-     * Set the margin around the QR code
-     */
-    public void setMargin(int margin) {
-        this.margin = margin;
-    }
-    
-    /**
-     * Generate a QR code with the given data and save it to a file
-     *
-     * @param data The data to encode in the QR code
-     * @param outputPath The path where the QR code image will be saved
-     * @return The absolute path to the generated file
-     * @throws WriterException If there is an error generating the QR code
-     * @throws IOException If there is an error saving the file
-     */
-    public String generate(String data, String outputPath)
-            throws WriterException, IOException {
-        // Create a configuration map
+
+    public String generate(String data, String outputFile) throws WriterException, IOException {
+        if (outputFile == null || outputFile.isEmpty()) {
+            outputFile = "qrcode6.png";
+        }
+
+        // Set QR code properties
         Map<EncodeHintType, Object> hints = new HashMap<>();
-        
-        // Set our configuration options
-        hints.put(EncodeHintType.ERROR_CORRECTION, this.errorCorrection);
-        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
-        hints.put(EncodeHintType.MARGIN, this.margin);
-        
-        // Create a QR code writer
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H); // Equivalent to ERROR_CORRECT_H in Python
+        hints.put(EncodeHintType.MARGIN, border);
+
+        // Create QR code
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, 
+                                                 boxSize * size * 6, boxSize * size * 6, hints);
         
-        // Create the QR code as a bit matrix
-        BitMatrix bitMatrix = qrCodeWriter.encode(
-            data,  // The data to encode
-            BarcodeFormat.QR_CODE,  // Type of barcode
-            this.width,  // Width of image
-            this.height,  // Height of image
-            hints  // Configuration options
-        );
+        // Calculate dimensions including border
+        int width = bitMatrix.getWidth();
+        int height = bitMatrix.getHeight();
         
-        // Determine file format from output path if not explicitly set
-        String outputFormat = this.format;
-        if (outputPath.contains(".")) {
-            String extension = outputPath.substring(outputPath.lastIndexOf('.') + 1).toLowerCase();
-            if (!extension.isEmpty()) {
-                outputFormat = extension;
+        // Create image
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        
+        // Convert color strings to Color objects
+        Color fill = parseColor(fillColor);
+        Color back = parseColor(backColor);
+        
+        // Draw QR code
+        Graphics2D graphics = (Graphics2D) image.getGraphics();
+        graphics.setColor(back);
+        graphics.fillRect(0, 0, width, height);
+        graphics.setColor(fill);
+        
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (bitMatrix.get(x, y)) {
+                    graphics.fillRect(x, y, 1, 1);
+                }
             }
         }
         
-        // Create the output file
-        File outputFile = new File(outputPath);
+        // Save image
+        File qrFile = new File(outputFile);
+        ImageIO.write(image, "png", qrFile);
         
-        // Write the QR code to the file
-        MatrixToImageWriter.writeToPath(bitMatrix, outputFormat, outputFile.toPath());
+        return qrFile.getAbsolutePath();
+    }
+    
+    private Color parseColor(String colorName) {
+        switch (colorName.toLowerCase()) {
+            case "black":
+                return Color.BLACK;
+            case "white":
+                return Color.WHITE;
+            case "red":
+                return Color.RED;
+            case "blue":
+                return Color.BLUE;
+            case "green":
+                return Color.GREEN;
+            // Add more colors as needed
+            default:
+                try {
+                    return Color.decode(colorName); // For hex colors
+                } catch (NumberFormatException e) {
+                    return Color.BLACK; // Default
+                }
+        }
+    }
+
+    public static void main(String[] args) {
+        QRCodeGenerator generator = new QRCodeGenerator();
         
-        // Return the absolute path
-        return outputFile.getAbsolutePath();
+        try {
+            String outputPath = generator.generate(
+                "Enter Link you want to make into a QR", 
+                "enter the name of QR image in ___.png"
+            );
+            System.out.println("QR code created at: " + outputPath);
+        } catch (WriterException | IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
